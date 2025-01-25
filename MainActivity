@@ -1,0 +1,108 @@
+// MainActivity.kt
+
+package com.example.book // your filename
+import android.os.Bundle
+import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+
+data class Book(val title: String, val author: String, val price: String)
+data class Genre(val name: String, val books: List<Book>)
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val genres = listOf(
+            Genre("Fiction", listOf(Book("1984", "George Orwell", "$10"), Book("Brave New World", "Aldous Huxley", "$12"))),
+            Genre("Non-Fiction", listOf(Book("Sapiens", "Yuval Noah Harari", "$15"), Book("Educated", "Tara Westover", "$14"))),
+            Genre("Science Fiction", listOf(Book("Dune", "Frank Herbert", "$20")))
+        )
+        setContent {
+            BookStoreApp(genres = genres)
+        }
+    }
+}
+
+@Composable
+fun BookStoreApp(genres: List<Genre>) {
+    var selectedBook by remember { mutableStateOf<Book?>(null) }
+
+    if (selectedBook == null) {
+        GenreList(genres = genres) { book ->
+            selectedBook = book
+        }
+    } else {
+        BookDetails(book = selectedBook!!) {
+            selectedBook = null
+        }
+    }
+}
+
+@Composable
+fun GenreList(genres: List<Genre>, onBookSelected: (Book) -> Unit) {
+    LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        genres.forEach { genre ->
+            item {
+                var expanded by remember { mutableStateOf(false) }
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = genre.name,
+                        style = MaterialTheme.typography.headlineMedium,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { expanded = !expanded }
+                            .padding(8.dp)
+                    )
+                    if (expanded) {
+                        genre.books.forEach { book ->
+                            Text(
+                                text = book.title,
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onBookSelected(book) }
+                                    .padding(start = 16.dp, top = 4.dp, bottom = 4.dp)
+                            )
+                        }
+                    }
+                }
+                Divider(modifier = Modifier.padding(vertical = 8.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun BookDetails(book: Book, onBack: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Text(
+            text = book.title,
+            style = MaterialTheme.typography.headlineLarge,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        Text(
+            text = "Author: ${book.author}",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(bottom = 8.dp)
+        )
+        Text(
+            text = "Price: ${book.price}",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+        Button(onClick = onBack) {
+            Text(text = "Back")
+        }
+    }
+}
